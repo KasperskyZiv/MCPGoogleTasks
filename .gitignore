@@ -141,3 +141,6 @@ vite.config.ts.timestamp-*
 # progreming tools
 .idea
 claude.md
+
+# OAuth tokens and credentials
+token.json
