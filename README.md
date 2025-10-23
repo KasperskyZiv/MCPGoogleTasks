@@ -108,6 +108,28 @@ npm run watch
 npm run dev
 ```
 
+## Testing
+
+The project includes comprehensive unit tests using Jest with mocks (no real credentials needed):
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+**Test Coverage:**
+- ✅ **utils.ts** - RTL text formatting utilities
+- ✅ **auth.ts** - OAuth authentication manager (mocked)
+- ✅ **tasks-client.ts** - Google Tasks API client (mocked)
+
+All tests use mocks and don't require real Google credentials or tokens.
+
 ## Usage with MCP Clients
 
 To use this server with an MCP client (like Claude Desktop), add it to your client configuration:
