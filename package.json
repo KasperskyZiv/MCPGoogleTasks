@@ -8,6 +8,9 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "dev": "tsx src/index.ts",
+    "setup:auth": "tsx src/scripts/setup-auth.ts",
+    "test:auth": "tsx src/scripts/test-auth.ts",
+    "view:tasks": "tsx src/scripts/view-tasks.ts",
     "prepare": "npm run build"
   },
   "keywords": [
