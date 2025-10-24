@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
+import { OAuth2Client, Credentials } from 'google-auth-library';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -22,6 +22,18 @@ export class GoogleAuthManager {
       redirectUri
     );
     this.tokenPath = tokenPath;
+
+    // Persist refreshed tokens automatically
+    this.oauth2Client.on('tokens', async (tokens: Credentials) => {
+      // Merge with existing to avoid dropping fields like refresh_token
+      const merged: Credentials = { ...(this.oauth2Client.credentials || {}), ...tokens };
+      try {
+        await this.saveToken(merged);
+      } catch (e) {
+        // Non-fatal: log and continue
+        console.error('[Auth] Failed to save refreshed token:', e);
+      }
+    });
   }
 
   /**
@@ -31,10 +43,13 @@ export class GoogleAuthManager {
     try {
       const token = await this.loadToken();
       this.oauth2Client.setCredentials(token);
+      // Ensure fresh access token (auto-refreshes if refresh_token present)
+      await this.oauth2Client.getAccessToken();
       return this.oauth2Client;
     } catch (error) {
       throw new Error(
-        'No valid token found. Please authenticate first using getAuthUrl() and authenticate().'
+        'No valid token found. Please authenticate first using getAuthUrl() and authenticate().',
+        { cause: error instanceof Error ? error : undefined }
       );
     }
   }
@@ -71,19 +86,31 @@ export class GoogleAuthManager {
   }
 
   /**
-   * Save token to file
+   * Save token to file (atomic write with secure permissions)
    */
-  private async saveToken(tokens: any): Promise<void> {
-    await fs.writeFile(this.tokenPath, JSON.stringify(tokens, null, 2));
+  private async saveToken(tokens: Credentials): Promise<void> {
+    const dir = path.dirname(this.tokenPath);
+    await fs.mkdir(dir, { recursive: true });
+    const tmp = `${this.tokenPath}.tmp`;
+    const data = JSON.stringify(tokens, null, 2);
+    await fs.writeFile(tmp, data, { mode: 0o600 });
+    await fs.rename(tmp, this.tokenPath);
   }
 
   /**
-   * Check if we have a valid token
+   * Check if we have a valid token (checks expiry and attempts silent refresh)
    */
   async hasValidToken(): Promise<boolean> {
     try {
-      await this.loadToken();
-      return true;
+      const token = await this.loadToken() as Credentials;
+      const exp = token.expiry_date ? Number(token.expiry_date) : 0;
+      // 60s clock skew tolerance
+      const fresh = exp && exp - 60_000 > Date.now();
+      if (fresh) return true;
+      // Try a silent refresh if we have a refresh_token
+      this.oauth2Client.setCredentials(token);
+      await this.oauth2Client.getAccessToken();
+      return !!this.oauth2Client.credentials.access_token;
     } catch {
       return false;
     }

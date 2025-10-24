@@ -35,7 +35,7 @@ A Model Context Protocol (MCP) server that provides integration with Google Task
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/KasperskyZiv/MCPGoogleTasks.git
 cd MCPGoogleTasks
 
 # Install dependencies
