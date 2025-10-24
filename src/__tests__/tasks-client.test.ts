@@ -1,6 +1,6 @@
 import { GoogleTasksClient } from '../tasks-client';
 import { OAuth2Client } from 'google-auth-library';
-import { tasks_v1 } from 'googleapis';
+
 
 // Mock googleapis
 jest.mock('googleapis', () => ({
@@ -32,6 +32,7 @@ describe('GoogleTasksClient', () => {
         get: jest.fn(),
         insert: jest.fn(),
         update: jest.fn(),
+        patch: jest.fn(),
         delete: jest.fn(),
         move: jest.fn(),
         clear: jest.fn(),
@@ -208,7 +209,7 @@ describe('GoogleTasksClient', () => {
         status: 'completed',
       };
 
-      mockTasksApi.tasks.update.mockResolvedValue({
+      mockTasksApi.tasks.patch.mockResolvedValue({
         data: mockUpdatedTask,
       });
 
@@ -218,7 +219,7 @@ describe('GoogleTasksClient', () => {
       });
 
       expect(result).toEqual(mockUpdatedTask);
-      expect(mockTasksApi.tasks.update).toHaveBeenCalledWith({
+      expect(mockTasksApi.tasks.patch).toHaveBeenCalledWith({
         tasklist: 'tasklist123',
         task: 'task123',
         requestBody: {

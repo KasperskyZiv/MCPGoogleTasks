@@ -69,14 +69,23 @@ describe('GoogleAuthManager', () => {
       const mockGetToken = jest.fn().mockResolvedValue({ tokens: mockTokens });
       (authManager as any).oauth2Client.getToken = mockGetToken;
 
+      (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
       (fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+      (fs.rename as jest.Mock).mockResolvedValue(undefined);
 
       await authManager.authenticate(mockCode);
 
       expect(mockGetToken).toHaveBeenCalledWith(mockCode);
+      // Check atomic write: writes to .tmp file first
       expect(fs.writeFile).toHaveBeenCalledWith(
-        mockTokenPath,
-        JSON.stringify(mockTokens, null, 2)
+        `${mockTokenPath}.tmp`,
+        JSON.stringify(mockTokens, null, 2),
+        { mode: 0o600 }
+      );
+      // Then renames to final path
+      expect(fs.rename).toHaveBeenCalledWith(
+        `${mockTokenPath}.tmp`,
+        mockTokenPath
       );
     });
   });
