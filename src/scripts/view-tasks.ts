@@ -12,6 +12,11 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost';
 const TOKEN_PATH = process.env.TOKEN_PATH || './token.json';
 
+/**
+ * Authenticates with Google, selects a task list (from the first CLI argument or the first available list), fetches its tasks, and prints formatted task details to the terminal.
+ *
+ * Exits the process with code 0 when no task lists or no tasks are found, and with code 1 on error.
+ */
 async function viewTasks() {
   try {
     // Initialize auth manager

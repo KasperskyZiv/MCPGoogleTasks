@@ -11,6 +11,18 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost';
 const TOKEN_PATH = process.env.TOKEN_PATH || './token.json';
 
+/**
+ * Guides an interactive Google Tasks OAuth setup flow for the CLI.
+ *
+ * Validates required environment variables, initializes the OAuth manager, and if no valid token exists:
+ * prints an authorization URL and prompts the user to paste the authorization code from the browser redirect.
+ * Exchanges the provided code for tokens and saves them to the configured token path.
+ *
+ * Side effects:
+ * - Reads from stdin to obtain the authorization code.
+ * - Writes the retrieved token to the configured TOKEN_PATH.
+ * - Terminates the process with exit code 0 on no-op (already authenticated) or 1 on fatal errors.
+ */
 async function setupAuth() {
   console.log('🔐 Google Tasks OAuth Setup\n');
 
