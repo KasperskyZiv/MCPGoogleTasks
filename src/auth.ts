@@ -78,11 +78,9 @@ export class GoogleAuthManager {
   /**
    * Load token from file
    */
-  private async loadToken(): Promise<any> {
-    console.error(`[DEBUG] Attempting to load token from: ${this.tokenPath}`);
+  private async loadToken(): Promise<Credentials> {
     const tokenData = await fs.readFile(this.tokenPath, 'utf-8');
-    console.error(`[DEBUG] Token loaded successfully`);
-    return JSON.parse(tokenData);
+    return JSON.parse(tokenData) as Credentials;
   }
 
   /**
