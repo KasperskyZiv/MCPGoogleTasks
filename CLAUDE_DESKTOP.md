@@ -14,7 +14,7 @@ This guide explains how to integrate the Google Tasks MCP server with Claude Des
 ### 1. Locate Claude Desktop Config
 
 The configuration file is located at:
-```
+```text
 ~/Library/Application Support/Claude/claude_desktop_config.json
 ```
 
@@ -28,14 +28,26 @@ Edit `claude_desktop_config.json` and add the Google Tasks server:
     "google-tasks": {
       "command": "node",
       "args": [
-        "/Users/zivkaspersky/WebstormProjects/MCPGoogleTasks/dist/index.js"
+        "<PROJECT_ROOT>/dist/index.js"
       ]
     }
   }
 }
 ```
 
-**Important:** Replace the path with your actual project directory path. Use absolute paths, not relative paths.
+**Important:** Replace `<PROJECT_ROOT>` with your actual project directory path. Use absolute paths, not relative paths.
+
+**Example:**
+```json
+"/Users/yourusername/path/to/MCPGoogleTasks/dist/index.js"
+```
+
+To get your project root path, run this in your project directory:
+```bash
+pwd
+# Output: /Users/yourusername/path/to/MCPGoogleTasks
+# Use: /Users/yourusername/path/to/MCPGoogleTasks/dist/index.js
+```
 
 ### 3. Configure Environment Variables
 
@@ -48,7 +60,7 @@ GOOGLE_CLIENT_SECRET=your-client-secret
 GOOGLE_REDIRECT_URI=http://localhost
 
 # Token storage path (use absolute path)
-TOKEN_PATH=/Users/zivkaspersky/WebstormProjects/MCPGoogleTasks/token.json
+TOKEN_PATH=<PROJECT_ROOT>/token.json
 ```
 
 **Critical:** Use an absolute path for `TOKEN_PATH`, not a relative path like `./token.json`. The server runs from Claude Desktop's working directory, so relative paths won't resolve correctly.
@@ -111,9 +123,8 @@ Completely quit and restart Claude Desktop for the configuration to take effect:
 ### Test the Connection
 
 Ask Claude:
-```
-Can you list my Google Tasks task lists?
-```
+
+> Can you list my Google Tasks task lists?
 
 Claude should use the `list_task_lists` tool and return your task lists.
 
@@ -149,7 +160,7 @@ Claude should use the `list_task_lists` tool and return your task lists.
 
 1. Check if token file exists:
    ```bash
-   cat /Users/zivkaspersky/WebstormProjects/MCPGoogleTasks/token.json
+   cat <PROJECT_ROOT>/token.json
    ```
 
 2. Verify token path in `.env`:
@@ -247,24 +258,20 @@ Claude Desktop integration:
 ## Example Usage
 
 ### List all task lists
-```
-Show me all my Google Tasks lists
-```
+
+> Show me all my Google Tasks lists
 
 ### Create a task
-```
-Create a task in my "Work" list called "Review pull requests" with a due date of tomorrow
-```
+
+> Create a task in my "Work" list called "Review pull requests" with a due date of tomorrow
 
 ### Update a task
-```
-Mark the task "Review pull requests" as completed
-```
+
+> Mark the task "Review pull requests" as completed
 
 ### View tasks with Hebrew/RTL support
-```
-Show me all tasks in my Hebrew task list
-```
+
+> Show me all tasks in my Hebrew task list
 
 The server automatically formats RTL text correctly for terminal display.
 

@@ -19,9 +19,44 @@ describe('utils', () => {
       expect(formatForTerminal(text)).toBe(reversed);
     });
 
+    it('should reverse Arabic text', () => {
+      const text = 'مرحبا';
+      const reversed = 'ابحرم';
+      expect(formatForTerminal(text)).toBe(reversed);
+    });
+
+    it('should handle Hebrew with emoji using grapheme-aware reversal', () => {
+      const text = 'שלום👋';
+      // With grapheme-aware: emoji stays intact, only position changes
+      // Expected: '👋םולש' (emoji moves to start, Hebrew reversed)
+      const result = formatForTerminal(text);
+      // Check that emoji is not broken (should contain the full emoji)
+      expect(result).toContain('👋');
+      // Check that Hebrew is reversed
+      expect(result).toContain('ם');
+    });
+
+    it('should handle Hebrew with combining marks', () => {
+      // Hebrew letter with combining mark (e.g., vowel point)
+      const text = 'שָׁלוֹם'; // Hebrew with nikud (vowel points)
+      const result = formatForTerminal(text);
+      // Should preserve combining marks with their base characters
+      // We just check it doesn't throw and produces a string
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+    });
+
     it('should handle numbers', () => {
       const text = '12345';
       expect(formatForTerminal(text)).toBe('12345');
+    });
+
+    it('should document mixed LTR/RTL limitation', () => {
+      // This test documents the limitation: mixed text is fully reversed
+      const text = 'Hello שלום';
+      const result = formatForTerminal(text);
+      // Mixed text gets fully reversed (not ideal, but documented limitation)
+      expect(result).toBe('םולש olleH');
     });
   });
 

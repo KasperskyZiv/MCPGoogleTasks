@@ -7,6 +7,13 @@
  *
  * This is intended only for console output; stored or transmitted data must remain unchanged.
  *
+ * Uses grapheme-aware reversal to preserve emojis, combining marks, and multi-codepoint sequences.
+ *
+ * **Limitations:**
+ * - Only handles pure RTL text (Hebrew, Arabic, etc.)
+ * - Mixed LTR/RTL text (e.g., "Hello שלום") is not supported and will be fully reversed
+ * - For proper bidirectional text rendering, use a terminal or UI with native bidi support
+ *
  * @param text - The text to format
  * @returns The original `text`, reversed if it contains RTL characters (Hebrew, Arabic, etc.), or an empty string for `null`, `undefined`, or other falsy input
  */
@@ -17,7 +24,16 @@ export function formatForTerminal(text: string | null | undefined): string {
   const hasRTL = /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
 
   if (hasRTL) {
-    // Reverse the string for terminal display
+    // Use grapheme-aware reversal to preserve emojis and combining marks
+    // Intl.Segmenter is available in Node.js 16+ and modern browsers
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+      const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+      const graphemes = Array.from(segmenter.segment(text), segment => segment.segment);
+      return graphemes.reverse().join('');
+    }
+
+    // Fallback for older Node.js versions (naive reversal)
+    // This will break emojis and combining marks but is better than nothing
     return text.split('').reverse().join('');
   }
 
