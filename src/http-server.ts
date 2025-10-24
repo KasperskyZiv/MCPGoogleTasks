@@ -13,6 +13,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { GoogleAuthManager } from './auth.js';
 import { GoogleTasksClient } from './tasks-client.js';
+import { TOOL_DEFINITIONS, READ_ONLY_TOOLS, MUTATING_TOOLS } from './mcp/tool-definitions.js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join, resolve } from 'path';
@@ -62,25 +63,6 @@ const TOKEN_PATH = process.env.TOKEN_PATH
   : resolve(process.cwd(), 'token.json');
 
 /**
- * Read-only tools that are always allowed
- */
-const READ_ONLY_TOOLS = new Set([
-  'list_task_lists',
-  'list_tasks',
-  'get_auth_url',
-]);
-
-/**
- * Mutating tools that require READ_ONLY=false
- */
-const MUTATING_TOOLS = new Set([
-  'create_task_list',
-  'create_task',
-  'update_task',
-  'delete_task',
-]);
-
-/**
  * MCP Server for Google Tasks over HTTP
  */
 class GoogleTasksHTTPServer {
@@ -126,161 +108,12 @@ class GoogleTasksHTTPServer {
     };
   }
 
-  private getAvailableTools(): Array<{
-    name: string;
-    description: string;
-    inputSchema: {
-      type: string;
-      properties: Record<string, any>;
-      required?: string[];
-    };
-  }> {
-    const allTools: Array<{
-      name: string;
-      description: string;
-      inputSchema: {
-        type: string;
-        properties: Record<string, any>;
-        required?: string[];
-      };
-    }> = [
-      {
-        name: 'list_task_lists',
-        description: 'List all Google Tasks task lists',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-        },
-      },
-      {
-        name: 'list_tasks',
-        description: 'List tasks in a specific task list',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            taskListId: {
-              type: 'string',
-              description: 'ID of the task list',
-            },
-            showCompleted: {
-              type: 'boolean',
-              description: 'Include completed tasks',
-              default: false,
-            },
-          },
-          required: ['taskListId'],
-        },
-      },
-      {
-        name: 'get_auth_url',
-        description: 'Get OAuth2 authorization URL for Google Tasks authentication',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-        },
-      },
-    ];
-
-    // Only add mutating tools if not in read-only mode
-    if (!READ_ONLY) {
-      allTools.push(
-        {
-          name: 'create_task_list',
-          description: 'Create a new task list',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              title: {
-                type: 'string',
-                description: 'Title of the new task list',
-              },
-            },
-            required: ['title'],
-          },
-        },
-        {
-          name: 'create_task',
-          description: 'Create a new task in a task list',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              taskListId: {
-                type: 'string',
-                description: 'ID of the task list',
-              },
-              title: {
-                type: 'string',
-                description: 'Title of the task',
-              },
-              notes: {
-                type: 'string',
-                description: 'Notes/description for the task',
-              },
-              due: {
-                type: 'string',
-                description: 'Due date in RFC 3339 format (e.g., 2024-12-31T23:59:59Z)',
-              },
-            },
-            required: ['taskListId', 'title'],
-          },
-        },
-        {
-          name: 'update_task',
-          description: 'Update an existing task',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              taskListId: {
-                type: 'string',
-                description: 'ID of the task list',
-              },
-              taskId: {
-                type: 'string',
-                description: 'ID of the task to update',
-              },
-              title: {
-                type: 'string',
-                description: 'New title for the task',
-              },
-              notes: {
-                type: 'string',
-                description: 'New notes for the task',
-              },
-              status: {
-                type: 'string',
-                enum: ['needsAction', 'completed'],
-                description: 'Task status',
-              },
-              due: {
-                type: 'string',
-                description: 'Due date in RFC 3339 format',
-              },
-            },
-            required: ['taskListId', 'taskId'],
-          },
-        },
-        {
-          name: 'delete_task',
-          description: 'Delete a task',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              taskListId: {
-                type: 'string',
-                description: 'ID of the task list',
-              },
-              taskId: {
-                type: 'string',
-                description: 'ID of the task to delete',
-              },
-            },
-            required: ['taskListId', 'taskId'],
-          },
-        }
-      );
+  private getAvailableTools() {
+    // Filter tools based on READ_ONLY mode
+    if (READ_ONLY) {
+      return TOOL_DEFINITIONS.filter(tool => READ_ONLY_TOOLS.has(tool.name));
     }
-
-    return allTools;
+    return TOOL_DEFINITIONS;
   }
 
   private setupToolHandlers(): void {
