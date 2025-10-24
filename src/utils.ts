@@ -3,14 +3,12 @@
  */
 
 /**
- * Format text for terminal display, reversing RTL text (Hebrew, Arabic, etc.)
- * This is a workaround for terminals that don't handle bidirectional text well.
+ * Format text for terminal display by reversing right-to-left (RTL) text when present.
  *
- * Note: This should ONLY be used for console output. The actual data stored
- * and sent via MCP should remain unchanged.
+ * This is intended only for console output; stored or transmitted data must remain unchanged.
  *
  * @param text - The text to format
- * @returns Reversed text for better terminal display
+ * @returns The original `text`, reversed if it contains RTL characters (Hebrew, Arabic, etc.), or an empty string for `null`, `undefined`, or other falsy input
  */
 export function formatForTerminal(text: string | null | undefined): string {
   if (!text) return '';
@@ -27,11 +25,13 @@ export function formatForTerminal(text: string | null | undefined): string {
 }
 
 /**
- * Format JSON output for terminal display, handling RTL text in specific fields
+ * Recursively prepare data for terminal display by reversing RTL text in specified fields.
  *
- * @param data - The data object to format
- * @param rtlFields - Array of field names that may contain RTL text (e.g., ['title', 'notes'])
- * @returns Formatted object with RTL fields reversed for terminal display
+ * Applies RTL formatting to string values whose keys match `rtlFields`, recursing into objects and arrays.
+ *
+ * @param data - The value to format; primitives are returned unchanged, arrays/objects are traversed.
+ * @param rtlFields - Field names whose string values should be RTL-formatted (default: `['title', 'notes']`).
+ * @returns A new value structurally equivalent to `data` with specified string fields RTL-formatted for terminal output.
  */
 export function formatJsonForTerminal(data: any, rtlFields: string[] = ['title', 'notes']): any {
   if (!data) return data;
