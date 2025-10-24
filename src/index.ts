@@ -10,14 +10,20 @@ import {
 import { GoogleAuthManager } from './auth.js';
 import { GoogleTasksClient } from './tasks-client.js';
 import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-// Load environment variables
-dotenv.config();
+// Get the directory of this file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from project root
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost';
-const TOKEN_PATH = process.env.TOKEN_PATH || './token.json';
+const TOKEN_PATH = process.env.TOKEN_PATH || join(__dirname, '..', 'token.json');
 
 /**
  * MCP Server for Google Tasks
