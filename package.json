@@ -8,6 +8,8 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/http-server.ts",
+    "start:http": "node dist/http-server.js",
     "setup:auth": "tsx src/scripts/setup-auth.ts",
     "test:auth": "tsx src/scripts/test-auth.ts",
     "view:tasks": "tsx src/scripts/view-tasks.ts",
@@ -25,10 +27,16 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.0",
-    "googleapis": "^144.0.0"
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "googleapis": "^144.0.0",
+    "helmet": "^8.0.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
     "@types/jest": "^29.5.0",
     "@types/node": "^22.0.0",
     "jest": "^29.7.0",

@@ -130,9 +130,11 @@ npm run test:coverage
 
 All tests use mocks and don't require real Google credentials or tokens.
 
-## Usage with MCP Clients
+## Usage Options
 
-To use this server with an MCP client (like Claude Desktop), add it to your client configuration:
+### Option 1: Stdio Transport (Local MCP Clients)
+
+For local MCP clients like Claude Desktop:
 
 ```json
 {
@@ -149,11 +151,45 @@ To use this server with an MCP client (like Claude Desktop), add it to your clie
 }
 ```
 
+### Option 2: HTTP/SSE Transport (OpenAI Integration via ngrok)
+
+For OpenAI ChatGPT or Custom GPTs:
+
+1. **Start the HTTP server:**
+   ```bash
+   npm run dev:http
+   ```
+
+2. **Expose via ngrok:**
+   ```bash
+   ngrok http 3000 --domain=your-domain.ngrok-free.app
+   ```
+
+3. **Configure OpenAI:**
+   - Endpoint: `https://your-domain.ngrok-free.app/mcp/sse`
+   - Authentication: Bearer Token
+   - Token: Your `MCP_TOKEN` from `.env`
+
+**See [NGROK_SETUP.md](./NGROK_SETUP.md) for complete security setup guide.**
+
+### Security Features (HTTP Mode)
+
+- ✅ **Bearer Token Authentication** - Secure token-based access
+- ✅ **Read-Only Mode by Default** - Only list/get operations (safer)
+- ✅ **Rate Limiting** - 100 requests per 15 minutes
+- ✅ **CORS Restrictions** - Limited to your ngrok domain
+- ✅ **Security Headers** - Helmet.js protection
+- ✅ **HTTPS via ngrok** - Encrypted traffic
+- ✅ **Local Binding** - Not exposed to LAN
+
 ## Architecture
 
-- **src/index.ts** - MCP server implementation with tool handlers
+- **src/index.ts** - MCP server (stdio transport) for local clients
+- **src/http-server.ts** - MCP server (HTTP/SSE transport) for OpenAI
 - **src/auth.ts** - OAuth 2.0 authentication management
 - **src/tasks-client.ts** - Google Tasks API client wrapper
+- **src/utils.ts** - RTL text formatting utilities
+- **src/scripts/** - Helper scripts for auth and viewing tasks
 
 ## Security Notes
 
