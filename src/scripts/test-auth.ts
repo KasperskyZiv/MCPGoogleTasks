@@ -12,6 +12,12 @@ const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost';
 const TOKEN_PATH = process.env.TOKEN_PATH || './token.json';
 
+/**
+ * Runs a standalone authentication test for the Google Tasks API and lists the user's task lists.
+ *
+ * Attempts to load and validate stored credentials, obtain an authenticated client, and fetch task lists,
+ * printing progress and results to the console. Exits the process with code 1 if no valid token is found or on error.
+ */
 async function testAuth() {
   try {
     console.log('🔐 Testing Google Tasks API authentication...\n');
