@@ -11,7 +11,7 @@ import { GoogleAuthManager } from './auth.js';
 import { GoogleTasksClient } from './tasks-client.js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 
 // Get the directory of this file
 const __filename = fileURLToPath(import.meta.url);
@@ -20,10 +20,24 @@ const __dirname = dirname(__filename);
 // Load environment variables from project root
 dotenv.config({ path: join(__dirname, '..', '.env') });
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+// Validate required environment variables
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
+if (!CLIENT_ID || !CLIENT_SECRET) {
+  console.error('❌ ERROR: Missing required Google OAuth credentials');
+  if (!CLIENT_ID) console.error('  - GOOGLE_CLIENT_ID is not set');
+  if (!CLIENT_SECRET) console.error('  - GOOGLE_CLIENT_SECRET is not set');
+  console.error('\nPlease set these in your .env file:');
+  console.error('GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com');
+  console.error('GOOGLE_CLIENT_SECRET=your-client-secret');
+  process.exit(1);
+}
+
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost';
-const TOKEN_PATH = process.env.TOKEN_PATH || join(__dirname, '..', 'token.json');
+const TOKEN_PATH = process.env.TOKEN_PATH
+  ? resolve(process.env.TOKEN_PATH)
+  : resolve(process.cwd(), 'token.json');
 
 /**
  * MCP Server for Google Tasks
@@ -47,8 +61,8 @@ class GoogleTasksMCPServer {
     );
 
     this.authManager = new GoogleAuthManager(
-      CLIENT_ID,
-      CLIENT_SECRET,
+      CLIENT_ID as string,
+      CLIENT_SECRET as string,
       REDIRECT_URI,
       TOKEN_PATH
     );

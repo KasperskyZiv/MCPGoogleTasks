@@ -125,7 +125,7 @@ export class GoogleTasksClient {
   }
 
   /**
-   * Update a task
+   * Update a task (partial update - only modifies specified fields)
    */
   async updateTask(
     taskListId: string,
@@ -137,13 +137,18 @@ export class GoogleTasksClient {
       status?: 'needsAction' | 'completed';
     }
   ): Promise<tasks_v1.Schema$Task> {
-    const response = await this.tasksApi.tasks.update({
+    // Build requestBody with only defined fields to avoid clearing unspecified ones
+    const requestBody: any = { id: taskId };
+    if (updates.title !== undefined) requestBody.title = updates.title;
+    if (updates.notes !== undefined) requestBody.notes = updates.notes;
+    if (updates.due !== undefined) requestBody.due = updates.due;
+    if (updates.status !== undefined) requestBody.status = updates.status;
+
+    // Use patch for partial updates
+    const response = await this.tasksApi.tasks.patch({
       tasklist: taskListId,
       task: taskId,
-      requestBody: {
-        id: taskId,
-        ...updates,
-      },
+      requestBody,
     });
     return response.data;
   }

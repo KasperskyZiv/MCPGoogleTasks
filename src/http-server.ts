@@ -14,9 +14,15 @@ import {
 import { GoogleAuthManager } from './auth.js';
 import { GoogleTasksClient } from './tasks-client.js';
 import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join, resolve } from 'path';
 
-// Load environment variables
-dotenv.config();
+// Get the directory of this file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from project root
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const PORT = parseInt(process.env.PORT || '3000');
 const MCP_TOKEN = process.env.MCP_TOKEN;
@@ -24,11 +30,6 @@ const NGROK_DOMAIN = process.env.NGROK_DOMAIN; // e.g., "your-domain.ngrok-free.
 const READ_ONLY = process.env.READ_ONLY !== 'false'; // Default to true (read-only)
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || '100');
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'); // 15 minutes
-
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost';
-const TOKEN_PATH = process.env.TOKEN_PATH || './token.json';
 
 // Validate required environment variables
 if (!MCP_TOKEN) {
@@ -38,8 +39,27 @@ if (!MCP_TOKEN) {
 }
 
 if (MCP_TOKEN.length < 32) {
-  console.warn('⚠️  WARNING: MCP_TOKEN should be at least 32 characters for security');
+  console.error('❌ ERROR: MCP_TOKEN must be at least 32 characters for security');
+  console.error(`Current length: ${MCP_TOKEN.length} characters`);
+  console.error('Generate a secure token with: openssl rand -hex 32');
+  process.exit(1);
 }
+
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
+if (!CLIENT_ID || !CLIENT_SECRET) {
+  console.error('❌ ERROR: Missing required Google OAuth credentials');
+  if (!CLIENT_ID) console.error('  - GOOGLE_CLIENT_ID is not set');
+  if (!CLIENT_SECRET) console.error('  - GOOGLE_CLIENT_SECRET is not set');
+  console.error('\nPlease set these in your .env file');
+  process.exit(1);
+}
+
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost';
+const TOKEN_PATH = process.env.TOKEN_PATH
+  ? resolve(process.env.TOKEN_PATH)
+  : resolve(process.cwd(), 'token.json');
 
 /**
  * Read-only tools that are always allowed
@@ -82,8 +102,8 @@ class GoogleTasksHTTPServer {
     );
 
     this.authManager = new GoogleAuthManager(
-      CLIENT_ID,
-      CLIENT_SECRET,
+      CLIENT_ID as string,
+      CLIENT_SECRET as string,
       REDIRECT_URI,
       TOKEN_PATH
     );
@@ -443,7 +463,12 @@ const corsOptions: cors.CorsOptions = {
         `http://${NGROK_DOMAIN}`,
       ];
 
-      if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+      // Exact match or match with path (but not subdomain)
+      const isAllowed = allowedOrigins.some(allowed => {
+        return origin === allowed || origin.startsWith(allowed + '/');
+      });
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
