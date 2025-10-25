@@ -200,4 +200,4 @@ For OpenAI ChatGPT or Custom GPTs:
 
 ## License
 
-MIT
+AGPL-3.0 license
